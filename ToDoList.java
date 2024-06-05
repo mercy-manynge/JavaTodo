@@ -1,3 +1,8 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -38,9 +43,49 @@ public class ToDoList {
         }
     }
 
+    //Saving tasks
+    public void saveToFile(String filename) {
+    try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+        for (Task task : tasks) {
+            writer.println(task.getDescription() + "|" + (task.isDone() ? "1" : "0"));
+        }
+        System.out.println("Tasks saved to " + filename);
+    } catch (IOException e) {
+        System.out.println("An error occurred while saving tasks: " + e.getMessage());
+    }
+}
+
+//Load Method
+public void loadFromFile(String filename) {
+    try (Scanner fileScanner = new Scanner(new File(filename))) {
+        tasks.clear();
+        while (fileScanner.hasNextLine()) {
+            String line = fileScanner.nextLine();
+            String[] parts = line.split("\\|");
+            if (parts.length == 2) {
+                String description = parts[0];
+                boolean isDone = parts[1].equals("1");
+                Task task = new Task(description);
+                if (isDone) {
+                    task.markAsDone();
+                }
+                tasks.add(task);
+            }
+        }
+        System.out.println("Tasks loaded from " + filename);
+    } catch (FileNotFoundException e) {
+        System.out.println("No saved tasks found.");
+    }
+}
+
+
+
     public static void main(String[] args) {
         ToDoList toDoList = new ToDoList();
         Scanner scanner = new Scanner(System.in);
+        final String filename = "tasks.txt"; //the file for the task to be stored
+        //Atempt to load file at startup
+        toDoList.loadFromFile(filename);
         while (true) {
             System.out.println("\nTo-Do List:");
             toDoList.displayTasks();
@@ -48,7 +93,9 @@ public class ToDoList {
             System.out.println("1. Add task");
             System.out.println("2. Remove task");
             System.out.println("3. Mark task as done");
-            System.out.println("4. Exit");
+            System.out.println("4. Save tasks");
+            System.out.println("5. Load tasks");
+            System.out.println("6. Exit");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
             scanner.nextLine();  // Consume newline
@@ -70,6 +117,13 @@ public class ToDoList {
                     toDoList.markTaskAsDone(doneIndex);
                     break;
                 case 4:
+                    toDoList.saveToFile(filename);
+                    break;
+                case 5:
+                    toDoList.loadFromFile(filename);
+                    break;
+                case 6:
+                    toDoList.saveToFile(filename);
                     System.out.println("Exiting...");
                     return;
                 default:
